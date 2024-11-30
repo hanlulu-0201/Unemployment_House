@@ -7,8 +7,10 @@ from datetime import datetime, date
 from statsmodels.tsa.stattools import adfuller
 from matplotlib.ticker import FormatStrFormatter
 from pandas.plotting import scatter_matrix
-from sklearn import datasets
+from plotly.offline import plot
 import subprocess
+import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 
 def process_raw_data():
     df_unrate = pd.read_csv(r'D:\JupyterNotebook\HG_Vora\UNRATE.csv')
@@ -32,7 +34,7 @@ def stationary_test(df):
                        'First diff of housing Price','Return of housing Price']
 
     resultdf = pd.DataFrame(columns=['Column', 'P-Value', 'Result', 'Description'])
-    for col in range(len(colList)-1):
+    for col in range(len(colList)):
         dftest = adfuller(df[colList[col]], autolag='AIC')
         if dftest[0] < dftest[4]["5%"]:
             result = 'stationary'
@@ -244,15 +246,16 @@ def compile_latex_to_pdf(latex_file):
     subprocess.run([r"C:\Users\siaha\AppData\Local\Programs\MiKTeX\miktex\bin\x64\pdflatex", latex_file], check=True)
 
 def generate_pdf_report(date: str, tempdir: str):
+    #Generate All Table and Images we need
     master = process_raw_data()
     stationary_result = stationary_test(master)
-    timeseries_recession_graph(master, r'D:\JupyterNotebook\HG_Vora\timeseries1.png')
+    timeseries_recession_graph(master, r'C:\\Users\\siaha\\PycharmProjects\\Unemployment_House\\Analytics\\timeseries1.png')
     first_corr = ['UNRATE', 'MSPNHSUS', 'house_diff', 'house_return']
     first_matrix = ['UNRATE', 'house_diff', 'house_return']
-    correlation_plot(master, first_corr, r'D:\JupyterNotebook\HG_Vora\correlationplot1.png')
-    correlation_matrix(master,first_matrix,r'D:\JupyterNotebook\HG_Vora\corrmatrix1.png')
+    correlation_plot(master, first_corr, r'C:\\Users\\siaha\\PycharmProjects\\Unemployment_House\\Analytics\\correlationplot1.png')
+    correlation_matrix(master,first_matrix,r'C:\\Users\\siaha\\PycharmProjects\\Unemployment_House\\Analytics\\corrmatrix1.png')
     regression_result = ols_regression_lag(master,24, 'house_diff')
-    regression_plot(regression_result, r'D:\JupyterNotebook\HG_Vora\regression_result.png')
+    regression_plot(regression_result, r'C:\\Users\\siaha\\PycharmProjects\\Unemployment_House\\Analytics\\regression_result.png')
 
     # Generate LaTeX report
     report_path = r"C:\\Users\\siaha\\PycharmProjects\\Unemployment_House\\Analytics\\latexTemplate.tex"
@@ -265,8 +268,151 @@ def generate_pdf_report(date: str, tempdir: str):
     return
 
 
+def generate_html_report(date: str, tempdir: str):
+    master = process_raw_data()
+    stationary_result = stationary_test(master)
+
+    # Create a figure with secondary y-axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    fig.add_trace(go.Scatter(x=master.index, y=master['UNRATE'], mode='lines', name='Unemployment Rate'),
+                  secondary_y=False)
+    # Add the second trace (new line)
+    fig.add_trace(go.Scatter(x=master.index, y=master['MSPNHSUS'], mode='lines', name='Median House Price',
+                             line=dict(dash='dash')), secondary_y=True)
+
+    # Update layout to include slider
+    fig.update_layout(
+        title='Interactive Unemployment Rate Time Series Graph',
+        xaxis=dict(
+            title='Date',
+            rangeselector=dict(
+                buttons=[
+                    dict(count=60, label="5y", step="month", stepmode="backward"),
+                    dict(count=120, label="10y", step="month", stepmode="backward"),
+                    dict(count=180, label="15y", step="month", stepmode="backward"),
+                    dict(step="all")
+                ],
+                bgcolor='rgba(50, 50, 50, 0.8)',  # Dark background for the range selector
+                activecolor='rgba(80, 80, 80, 1)',  # Darker shade for active button
+                bordercolor='rgba(200, 200, 200, 0.6)'  # Subtle border color for contrast
+            ),
+            rangeslider=dict(visible=True),  # Add the range slider
+            type="date"
+        ),
+        yaxis=dict(title='Unemployment Rate', side='left'),  # Primary y-axis on the left
+        yaxis2=dict(title='Median House Price', side='right'),  # Secondary y-axis on the right
+        template='plotly_dark'
+    )
+
+    # Save the interactive graph to HTML
+    graph_html = plot(fig, output_type='div', include_plotlyjs='cdn')
+
+    # Create an HTML table from the DataFrame
+    table_html = stationary_result[['Description', 'P-Value', 'Result']].to_html(
+        index=False,
+        classes='table table-dark table-striped',
+        justify='center',
+        escape=False,
+        table_id = 'data-table'
+    )
+
+    # Create an HTML template with custom filtering functionality
+    html_template = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Interactive Time Series Report</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            body {{
+                background-color: #2c2c2c;
+                color: white;
+            }}
+            h1 {{
+                text-align: center;
+                margin-top: 20px;
+            }}
+            .table-container {{
+                margin: 20px auto;
+                width: 90%;
+                text-align: center;
+            }}
+            .table {{
+                font-size: 16px;
+                width: 100%;
+            }}
+            .table th, .table td {{
+                padding: 15px;
+            }}
+            .filter-container {{
+                margin-bottom: 20px;
+                text-align: center;
+            }}
+            .filter-container select {{
+                padding: 10px;
+                background-color: #444;
+                color: white;
+                border: 1px solid #555;
+            }}
+        </style>
+        <script>
+            function filterTable() {{
+                console.log('test1')
+                var filterValue = document.getElementById("filter-dropdown").value;
+                var table = document.getElementById("data-table");
+                var rows = table.getElementsByTagName("tr");
+                console.log(table)  
+                
+                for (var i = 1; i < rows.length; i++) {{
+                    var cells = rows[i].getElementsByTagName("td");
+                    var resultCell = cells[2]; // 3rd column (Result)
+                    console.log('test3')    
+                    if (resultCell) {{
+                        var resultText = resultCell.textContent || resultCell.innerText;
+                        if (filterValue === "" || resultText === filterValue) {{
+                            rows[i].style.display = "";
+                        }} else {{
+                            rows[i].style.display = "none";
+                        }}
+                    }}
+                }}
+            }}
+        </script>
+    </head>
+    <body>
+    <h1>Interactive Time Series Report</h1>
+    <p>This report includes an interactive time series graph and an interactive data table.</p>
+    {graph_html}
+
+    <!-- Dropdown filter for Result column -->
+    <div class="filter-container">
+        <label for="filter-dropdown" style="color: white;">Filter by Result:</label>
+        <select id="filter-dropdown" class="form-select" onchange="filterTable()">
+            <option value="">All</option>
+            <option value="stationary">Stationary</option>
+            <option value="non-stationary">Non-Stationary</option>
+        </select>
+    </div>
+
+    <div class="table-container">
+        <h2>Time Series Data Table</h2>
+            {table_html}
+    </div>
+    </body>
+    </html>
+    """
+
+    # Save the HTML report
+    output_path = r"C:\Users\siaha\PycharmProjects\Unemployment_House\Analytics\unemployment_house_report.html"
+    with open(output_path, "w") as f:
+        f.write(html_template)
+
+    print(f"Report saved to {output_path}")
+
+    return 0
+
+
+
 def generate_excel_report(date: str, tempdir: str):
     return
 
-def generate_html_report(date: str, tempdir: str):
-    return

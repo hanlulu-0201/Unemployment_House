@@ -5,6 +5,8 @@ import sys
 import tempfile
 from reports import report_runner
 
+# python GenerateReports/main.py -r unratehouse_html
+
 def report_arg():
     parser = argparse.ArgumentParser(description="Run Reports!")
     parser.add_argument( '-o', "--output",type=str,required=False, help="output directory")
