@@ -205,7 +205,7 @@ This is a simple LaTeX report generated using Python. Below is a plot generated 
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=0.8\textwidth]{C:/Users/siaha/PycharmProjects/Unemployment_House/Analytics/timeseries1.png}
+\includegraphics[width=0.8\textwidth]{C:/Users/siaha/PycharmProjects/Unemployment_House/Analytics_Output/timeseries1.png}
 \caption{Time Serie Test}
 \end{figure}
 
@@ -249,17 +249,17 @@ def generate_pdf_report(date: str, tempdir: str):
     #Generate All Table and Images we need
     master = process_raw_data()
     stationary_result = stationary_test(master)
-    timeseries_recession_graph(master, r'C:\\Users\\siaha\\PycharmProjects\\Unemployment_House\\Analytics\\timeseries1.png')
+    timeseries_recession_graph(master, r'/Analytics_Output\\timeseries1.png')
     first_corr = ['UNRATE', 'MSPNHSUS', 'house_diff', 'house_return']
     first_matrix = ['UNRATE', 'house_diff', 'house_return']
-    correlation_plot(master, first_corr, r'C:\\Users\\siaha\\PycharmProjects\\Unemployment_House\\Analytics\\correlationplot1.png')
-    correlation_matrix(master,first_matrix,r'C:\\Users\\siaha\\PycharmProjects\\Unemployment_House\\Analytics\\corrmatrix1.png')
+    correlation_plot(master, first_corr, r'/Analytics_Output\\correlationplot1.png')
+    correlation_matrix(master, first_matrix, r'/Analytics_Output\\corrmatrix1.png')
     regression_result = ols_regression_lag(master,24, 'house_diff')
-    regression_plot(regression_result, r'C:\\Users\\siaha\\PycharmProjects\\Unemployment_House\\Analytics\\regression_result.png')
+    regression_plot(regression_result, r'/Analytics_Output\\regression_result.png')
 
     # Generate LaTeX report
-    report_path = r"C:\\Users\\siaha\\PycharmProjects\\Unemployment_House\\Analytics\\latexTemplate.tex"
-    image_path=  r'C:\\Users\\siaha\\PycharmProjects\\Unemployment_House\\Analytics'
+    report_path = r"/Analytics_Output\\latexTemplate.tex"
+    image_path= r'/Analytics_Output'
     generate_latex_report(stationary_result, image_path, report_path)
 
     # Compile LaTeX file to PDF
@@ -403,7 +403,7 @@ def generate_html_report(date: str, tempdir: str):
     """
 
     # Save the HTML report
-    output_path = r"C:\Users\siaha\PycharmProjects\Unemployment_House\Analytics\unemployment_house_report.html"
+    output_path = r"/Analytics_Output\unemployment_house_report.html"
     with open(output_path, "w") as f:
         f.write(html_template)
 
