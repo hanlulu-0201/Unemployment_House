@@ -265,7 +265,7 @@ def generate_pdf_report(date: str, tempdir: str):
     # Compile LaTeX file to PDF
     compile_latex_to_pdf(report_path)
 
-    return
+    return 0
 
 
 def generate_html_report(date: str, tempdir: str):
@@ -414,5 +414,16 @@ def generate_html_report(date: str, tempdir: str):
 
 
 def generate_excel_report(date: str, tempdir: str):
+    master = process_raw_data()
+    stationary_result = stationary_test(master)
+    regression_result = ols_regression_lag(master, 24, 'house_diff')
+    # Write the DataFrames to an Excel file
+    report_path = r"C:\Users\siaha\PycharmProjects\Unemployment_House\Analytics_Output\unemployment_house_report.xlsx"
+    with pd.ExcelWriter(report_path) as writer:
+        stationary_result[['Description','P-Value', 'Result']].to_excel(writer, sheet_name='Analytics', index=False)
+        regression_result.to_excel(writer, sheet_name='Analytics', index=False,
+                                   header=True, startrow=len(stationary_result)+5)
+        master.to_excel(writer, sheet_name='Raw', index=True)
+
     return
 

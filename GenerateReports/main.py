@@ -6,6 +6,7 @@ import tempfile
 from reports import report_runner
 
 # python GenerateReports/main.py -r unratehouse_html
+# python GenerateReports/main.py -r unratehouse_excel
 
 def report_arg():
     parser = argparse.ArgumentParser(description="Run Reports!")
