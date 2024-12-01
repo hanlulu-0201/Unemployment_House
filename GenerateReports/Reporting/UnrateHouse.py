@@ -166,14 +166,18 @@ def ols_regression_lag(master,nlag, col):
     return R2_df
 
 def regression_plot(R2_df, dir):
-    fig, ax1 = plt.subplots(figsize=(8, 8))
+    fig, ax1 = plt.subplots(figsize=(6, 6))
     ax1.plot('Total Lag', 'R2', data=R2_df, color='tab:red', label='R square')
     ax1.set_xlabel('Lags', fontdict={'fontsize': 15, 'fontweight': 'medium'})
     ax1.set_ylabel('R square', fontdict={'fontsize': 15, 'fontweight': 'medium'})
     ax1.set_title('R square over different lags', fontdict={'fontsize': 20, 'fontweight': 'medium'})
-
     ax1.set_xticks(np.linspace(min(R2_df['Total Lag']), max(R2_df['Total Lag']), 5, dtype=int))
     ax1.grid(True)
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+    ax2.plot('Total Lag', 'Change in R2', data=R2_df, color='tab:red', alpha=0.3, label='House Price')
+    ax2.tick_params(axis='y')
+    ax2.set_ylabel('Change in R2', size=15)
     # rotates and right aligns the x labels, and moves the bottom of the
     # axes up to make room for them
     fig.autofmt_xdate()
@@ -182,49 +186,205 @@ def regression_plot(R2_df, dir):
     plt.clf()
     return 0
 
+def timeseries_recession_graph_after(master, dir):
+    master['house_lag12'] = master['house_12MA'].shift(12)
+    fig, ax1 = plt.subplots(figsize=(18, 8))
+    ax1.plot(master.index, 'UNRATE', data=master, color='tab:blue', label='UNRATE')
+    ax1.set_xlabel('Year', fontdict={'fontsize': 15, 'fontweight': 'medium'})
+    ax1.set_ylabel('Unemploymet Rate %', fontdict={'fontsize': 15, 'fontweight': 'medium'})
+    ax1.set_title('Unemploymet Rate Over Time', fontdict={'fontsize': 20, 'fontweight': 'medium'})
+    ax1.grid(True)
 
-def generate_latex_report(df, image_path, report_path):
+    ax2 = ax1.twinx()
+    ax2.plot(master.index, 'house_lag12', data=master, color='tab:grey', alpha=0.5, label='lag 12')
+    ax2.tick_params(axis='y')  # ,labelcolor = color)
+    ax2.set_ylabel('Return in Median House Sales Price', size=15)
+    plt.legend(loc='upper left')
+
+    # Year break is unemployment peak or trough
+    ax3 = ax1.twinx()
+    break_year = np.datetime64(date(1971, 10, 1).strftime('%Y-%m-%d'))
+    ax3.axvline(break_year, ls='--', color='r', alpha=0.5)
+    ax3.axis('off')
+
+    ax4 = ax1.twinx()
+    break_year = np.datetime64(date(1975, 6, 1).strftime('%Y-%m-%d'))
+    ax4.axvline(break_year, ls='--', color='r', alpha=0.5)
+    ax4.axis('off')
+
+    ax5 = ax1.twinx()
+    break_year = np.datetime64(date(1982, 12, 1).strftime('%Y-%m-%d'))
+    ax5.axvline(break_year, ls='--', color='r', alpha=0.5)
+    ax5.axis('off')
+
+    ax6 = ax1.twinx()
+    break_year = np.datetime64(date(1992, 6, 1).strftime('%Y-%m-%d'))
+    ax6.axvline(break_year, ls='--', color='r', alpha=0.5)
+    ax6.axis('off')
+
+    ax7 = ax1.twinx()
+    break_year = np.datetime64(date(2009, 11, 1).strftime('%Y-%m-%d'))
+    ax7.axvline(break_year, ls='--', color='r', alpha=0.5)
+    ax7.axis('off')
+
+    ax8 = ax1.twinx()
+    break_year = np.datetime64(date(2023, 2, 1).strftime('%Y-%m-%d'))
+    ax8.axvline(break_year, ls='--', color='r', alpha=0.5)
+    ax8.axis('off')
+
+    # rotates and right aligns the x labels, and moves the bottom of the
+    # axes up to make room for them
+    fig.autofmt_xdate()
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.savefig(dir)
+    plt.clf()
+    return 0
+
+def generate_latex_report(df,df2, image_path, report_path):
     # Create a LaTeX document with embedded image and dataframe
     latex_code = r'''
-\documentclass{article}
+\documentclass[twocolumn,12pt]{article}
+\usepackage[left=1.5cm, right=1.5cm, bottom=2cm, top=2cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{mathptmx}
+\usepackage{fancyhdr}
+\usepackage{latexsym}
+\usepackage{booktabs,chemformula}
+\usepackage{multirow,array}
+\usepackage{multicol}
+\usepackage{natbib}
 \usepackage{graphicx}
-\usepackage{longtable}
-\usepackage{geometry}
-\geometry{a4paper, margin=1in}
-\graphicspath{{C''' + image_path + r'''}}
+\usepackage{colortbl}
+\usepackage{indentfirst}
+\usepackage{amsmath}
+\usepackage[english]{babel}
+\usepackage[capposition=top]{floatrow}
+
+\usepackage[compact]{titlesec}
+\titlespacing{\section}{1pt}{2ex}{2ex}
+\titlespacing{\subsection}{1pt}{1ex}{1ex}
+
+\definecolor{indigo(dye)}{rgb}{0.0, 0.25, 0.42}
+\definecolor{lightgreen}{rgb}{0.56, 0.93, 0.56}
+\definecolor{lightpink}{rgb}{1.0, 0.71, 0.76}
+\definecolor{lightyellow}{rgb}{0.98, 0.98, 0.82}
+
+\setlength{\parindent}{20pt}
+\setlength{\parskip}{\baselineskip}
+
+\let\oldheadrule\headrule% Copy \headrule into \oldheadrule
+\renewcommand{\headrule}{\color{indigo(dye)}\oldheadrule}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\thepage}
+\lhead{\textcolor{indigo(dye)}{US Unemployment Rate VS. Median House Sale Price in the US.}}
+
+\usepackage{titling}
+\setlength{\droptitle}{-1cm}
 
 \begin{document}
 
-\title{Sample LaTeX Report with Image and Dataframe}
-\author{Your Name}
-\date{\today}
+\title{\textbf{\textcolor{indigo(dye)}{Relationship between the US Unemployment Rate and Median House Sale Price in the US.}}}
+\author{\textbf{\textcolor{indigo(dye)}{Hanlu Xia}}}
+\date{\textbf{\textcolor{indigo(dye)}{Dec 1, 2024}}}
 \maketitle
 
-\section{Introduction}
-This is a simple LaTeX report generated using Python. Below is a plot generated from Python:
+\section*{\textcolor{indigo(dye)}{Introduction}}
 
-\begin{figure}[h!]
+Unemployment is an important indicators used to explain US economy performance, and it is proved to be highly correlated to recession. On the other hand, Housing market is always involved either directly or indirectly in US recession, especially in 2008.
+
+This analysis wants to explore whether housing price can be used an a predictor to US recession (using umeployment rate to represent the recession cycle). They are very likely to have a negative correlation as housing market usually goes down when unemployment goes up. It's also very likely there would be lagging effects between the two, as housing market usually starts to go down before umemployment starts to go up. If there are measurable lags, how many months would that be?
+
+\section*{\textcolor{indigo(dye)}{Exploratory Analysis}}
+This shows the Time Series Plot of Raw data, and the stationary analysis of raw data and their first difference.
+
+\begin{figure*}[ht]
 \centering
-\includegraphics[width=0.8\textwidth]{C:/Users/siaha/PycharmProjects/Unemployment_House/Analytics_Output/timeseries1.png}
-\caption{Time Serie Test}
+\includegraphics[width=1\textwidth]{'''+ image_path + '''timeseries1.png}
+\caption{Unemployment Vs. House Price}
+\end{figure*}
+
+The following table represents the stationary analysis:
+
+
+\\begin{table}[H]
+\scalebox{0.8}{
+\\begin{tabular}{@{} l*{3}{>{}c<{}} @{}}
+\\toprule
+Description & P-Value & Result & \\\\
+\midrule
+''' + generate_dataframe_latex(df,['Description','P-Value','Result']) + r'''
+\bottomrule
+\end{tabular}}
+\caption{Stationary Analysis}
+\end{table}
+
+\subsection*{\textcolor{indigo(dye)}{Correlation Analysis of Raw data and First Difference}}
+
+Some text to fill here; Some text to fill here; Some text to fill here; Some text to fill here; Some text to fill here; 
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{'''+ image_path + '''correlationplot1.png}
+\caption{Correlation Plot of Raw data and First Difference }
+\end{figure}
+
+\\begin{figure}[H]
+\centering
+\scalebox{1}{
+\includegraphics[width=1\\textwidth]{'''+ image_path + '''corrmatrix1.png}}
+\caption{Correlation Matrix of Raw data and First Difference}
+\end{figure}
+
+\section*{\\textcolor{indigo(dye)}{Regression Analysis}}
+
+Some text to fill here; Some text to fill here; Some text to fill here; Some text to fill here; Some text to fill here; 
+
+\\begin{table}[H]
+\scalebox{1}{
+\\begin{tabular}{@{} l*{3}{>{}c<{}} @{}}
+\\toprule
+Total Lag & R2 & Change in R2 & \\\\
+\midrule
+''' + generate_dataframe_latex(df2,['Total Lag','R2','Change in R2']) + r'''
+\bottomrule
+\end{tabular}}
+\caption{Regression and Lags}
+\label{market_crash}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=1\textwidth]{'''+ image_path + '''regression_result.png}
+\caption{Change in R2 Over Lags}
 \end{figure}
 
 
-\section{Dataframe}
-The following table represents some sample data:
+\section*{\\textcolor{indigo(dye)}{Correlation with Optimized Lag}}
 
-\begin{longtable}{|c|c|c|}
-\hline
-\textbf{Index} & \textbf{Value1} & \textbf{Value2} \\
-\hline
-\endfirsthead
-\hline
-\textbf{Index} & \textbf{Value1} & \textbf{Value2} \\
-\hline
-\endhead
-''' + generate_dataframe_latex(df) + r'''
+Some text to fill here; Some text to fill here; Some text to fill here; Some text to fill here; Some text to fill here; 
 
-\end{longtable}
+\\begin{figure*}[h!]
+\centering
+\includegraphics[width=1\\textwidth]{'''+ image_path + '''correlationplot2.png}
+\caption{Correlation Plot After Lag}
+\end{figure*}
+
+\\begin{figure*}[h!]
+\centering
+\includegraphics[width=1\\textwidth]{'''+ image_path + '''corrmatrix2.png}
+\caption{Correlation Matrix After Lag}
+\end{figure*}
+
+\section*{\\textcolor{indigo(dye)}{Conclusion}}
+Based on analysis above, it is statistically confident enough to say that housing price is a predictor of the unemployment rate with 11 month lags.
+
+\\begin{figure*}[h!]
+\centering
+\includegraphics[width=1\\textwidth]{'''+ image_path + '''timeseries2.png}
+\caption{Unemployment Rate Vs. House Price with 11 lags}
+\end{figure*}
+
 
 \end{document}
     '''
@@ -234,36 +394,56 @@ The following table represents some sample data:
 
 
 # Function to convert a pandas DataFrame to LaTeX table format
-def generate_dataframe_latex(df):
+def generate_dataframe_latex(df,list3):
     latex_str = ""
+    df = df.round(3)
     for index, row in df.iterrows():
-        latex_str += f"{row['Description']} & {row['P-Value']} & {row['Result']}  \\\\\n"
+        latex_str += f"{row[list3[0]]} & {row[list3[1]]} & {row[list3[2]]}  \\\\\n"
     return latex_str
 
 
 # Function to compile LaTeX document into PDF
-def compile_latex_to_pdf(latex_file):
-    subprocess.run([r"C:\Users\siaha\AppData\Local\Programs\MiKTeX\miktex\bin\x64\pdflatex", latex_file], check=True)
+def compile_latex_to_pdf(latex_file,cwd):
+    subprocess.run([r"C:\Users\siaha\AppData\Local\Programs\MiKTeX\miktex\bin\x64\pdflatex",
+                        latex_file],
+                        check=True,
+                        cwd=cwd)
 
-def generate_pdf_report(date: str, tempdir: str):
-    #Generate All Table and Images we need
+def generate_pdf_report(date: str, dir: str):
+    output_dir = dir
+
+    #Generate All Table and Images we need for exploratory Analysis
     master = process_raw_data()
     stationary_result = stationary_test(master)
-    timeseries_recession_graph(master, r'/Analytics_Output\\timeseries1.png')
+    timeseries_recession_graph(master, output_dir + 'timeseries1.png')
     first_corr = ['UNRATE', 'MSPNHSUS', 'house_diff', 'house_return']
     first_matrix = ['UNRATE', 'house_diff', 'house_return']
-    correlation_plot(master, first_corr, r'/Analytics_Output\\correlationplot1.png')
-    correlation_matrix(master, first_matrix, r'/Analytics_Output\\corrmatrix1.png')
+    correlation_plot(master, first_corr, output_dir + 'correlationplot1.png')
+    correlation_matrix(master, first_matrix, output_dir +'corrmatrix1.png')
+    #Generate Regression Result
     regression_result = ols_regression_lag(master,24, 'house_diff')
-    regression_plot(regression_result, r'/Analytics_Output\\regression_result.png')
+    regression_plot(regression_result, output_dir +'regression_result.png')
+    #Generate Result graphs
+    master['house_6MA'] = master['house_diff'].rolling(window=6).mean()
+    master['house_12MA'] = master['house_diff'].rolling(window=12).mean()
+    master['house_24MA'] = master['house_diff'].rolling(window=24).mean()
+    master['house_36MA'] = master['house_diff'].rolling(window=36).mean()
+    master['house_48MA'] = master['house_diff'].rolling(window=48).mean()
+    master['house_60MA'] = master['house_diff'].rolling(window=60).mean()
+    second_corr = ['UNRATE', 'house_diff','house_6MA','house_12MA','house_24MA','house_36MA','house_48MA']
+    second_matrix = ['UNRATE','house_diff','house_6MA','house_12MA','house_24MA','house_36MA','house_48MA']
+    correlation_plot(master, second_corr, output_dir + 'correlationplot2.png')
+    correlation_matrix(master, second_matrix, output_dir + 'corrmatrix2.png')
+    timeseries_recession_graph_after(master, output_dir + 'timeseries2.png')
 
     # Generate LaTeX report
-    report_path = r"/Analytics_Output\\latexTemplate.tex"
-    image_path= r'/Analytics_Output'
-    generate_latex_report(stationary_result, image_path, report_path)
+
+    report_path = output_dir + date.strftime("%Y%m%d") +"_unemployment_house_report.tex"
+    image_path= r'C:/Users/siaha/PycharmProjects/Unemployment_House/Analytics_Output/'
+    generate_latex_report(stationary_result, regression_result, image_path, report_path)
 
     # Compile LaTeX file to PDF
-    compile_latex_to_pdf(report_path)
+    compile_latex_to_pdf(report_path,output_dir)
 
     return 0
 
