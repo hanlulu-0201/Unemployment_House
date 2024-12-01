@@ -321,7 +321,7 @@ def generate_html_report(date: str, tempdir: str):
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Interactive Time Series Report</title>
+        <title>US Unemployment Rate Vs. Median House Sale Price in the US</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <style>
             body {{
@@ -345,14 +345,26 @@ def generate_html_report(date: str, tempdir: str):
                 padding: 15px;
             }}
             .filter-container {{
-                margin-bottom: 20px;
+                margin-bottom: 10px;  /* Reduced margin */
                 text-align: center;
+                width: 50%;           /* Adjust width to make it smaller */
+                margin-left: auto;    /* Center horizontally */
+                margin-right: auto;   /* Center horizontally */
+                display: flex;        /* Use flexbox for alignment */
+                flex-direction: column; /* Align label and select vertically */
+                align-items: center;  /* Center content horizontally */
+            }}
+            .filter-container label {{
+                margin-bottom: 5px;  /* Add some space between the label and the select */
+                font-size: 16px;     /* Adjust font size if needed */
             }}
             .filter-container select {{
-                padding: 10px;
+                padding: 5px;         /* Reduce padding for smaller dropdown */
                 background-color: #444;
                 color: white;
                 border: 1px solid #555;
+                width: 100%;          /* Ensure it takes up the full width of the container */
+                max-width: 200px;     /* Optionally, set a max width for the dropdown */
             }}
         </style>
         <script>
@@ -362,7 +374,6 @@ def generate_html_report(date: str, tempdir: str):
                 var table = document.getElementById("data-table");
                 var rows = table.getElementsByTagName("tr");
                 console.log(table)  
-                
                 for (var i = 1; i < rows.length; i++) {{
                     var cells = rows[i].getElementsByTagName("td");
                     var resultCell = cells[2]; // 3rd column (Result)
@@ -380,10 +391,10 @@ def generate_html_report(date: str, tempdir: str):
         </script>
     </head>
     <body>
-    <h1>Interactive Time Series Report</h1>
-    <p>This report includes an interactive time series graph and an interactive data table.</p>
+    <h1>US Unemployment Rate Vs. Median House Sale Price in the US</h1>
+    <p>Unemployment is an important indicators used to explain US economy performance, and it is proved to be highly correlated to recession. On the other hand, Housing market is always involved either directly or indirectly in US recession, especially in 2008. </p>
+    <p>This analysis wants to explore whether housing price can be used as a predictor to US recession (using umeployment rate to represent the recession cycle). They are very likely to have a negative correlation as housing market usually goes down when unemployment goes up. It's also very likely there would be lagging effects between the two, as housing market usually starts to go down before umemployment starts to go up. If there are measurable lags, how many months would that be?</p>
     {graph_html}
-
     <!-- Dropdown filter for Result column -->
     <div class="filter-container">
         <label for="filter-dropdown" style="color: white;">Filter by Result:</label>
@@ -403,14 +414,13 @@ def generate_html_report(date: str, tempdir: str):
     """
 
     # Save the HTML report
-    output_path = r"/Analytics_Output\unemployment_house_report.html"
+    output_path = r"C:\Users\siaha\PycharmProjects\Unemployment_House\Analytics_Output\unemployment_house_report.html"
     with open(output_path, "w") as f:
         f.write(html_template)
 
     print(f"Report saved to {output_path}")
 
     return 0
-
 
 
 def generate_excel_report(date: str, tempdir: str):
@@ -420,9 +430,8 @@ def generate_excel_report(date: str, tempdir: str):
     # Write the DataFrames to an Excel file
     report_path = r"C:\Users\siaha\PycharmProjects\Unemployment_House\Analytics_Output\unemployment_house_report.xlsx"
     with pd.ExcelWriter(report_path) as writer:
-        stationary_result[['Description','P-Value', 'Result']].to_excel(writer, sheet_name='Analytics', index=False)
-        regression_result.to_excel(writer, sheet_name='Analytics', index=False,
-                                   header=True, startrow=len(stationary_result)+5)
+        stationary_result[['Description','P-Value', 'Result']].to_excel(writer, sheet_name='Stationary_Analytics', index=False)
+        regression_result.to_excel(writer, sheet_name='Regression_Result', index=False,header=True)
         master.to_excel(writer, sheet_name='Raw', index=True)
 
     return
