@@ -12,6 +12,7 @@ import subprocess
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
+# Function to manipulate raw data
 def process_raw_data():
     df_unrate = pd.read_csv(r'D:\JupyterNotebook\HG_Vora\UNRATE.csv')
     df_unrate = df_unrate.set_index(pd.to_datetime(df_unrate['DATE']))
@@ -28,6 +29,7 @@ def process_raw_data():
 
     return master
 
+# Function to run stationary test
 def stationary_test(df):
     colList = ['UNRATE','MSPNHSUS','house_diff','house_return']
     descriptionList = ['Unemployment Rate','Median Housing Price Over Time',
@@ -47,6 +49,7 @@ def stationary_test(df):
 
     return resultdf
 
+# Function to graph time series with raw data
 def timeseries_recession_graph(master, dir):
     # Created a graph to visualize the raw data
     fig, ax1 = plt.subplots(figsize=(18, 8))
@@ -95,6 +98,7 @@ def timeseries_recession_graph(master, dir):
 
     return 0
 
+# Function to create correlation plot
 def correlation_plot(master, list,dir):
     # diagonal is graphed by kernel density estimation (KDE)
     ax = scatter_matrix(master[list],
@@ -121,6 +125,7 @@ def correlation_plot(master, list,dir):
     plt.clf()
     return 0
 
+# Function to create correlation matrix
 def correlation_matrix(master, list,dir):
     corr_matrix = master[list]
     np.bool = np.bool_
@@ -140,6 +145,7 @@ def correlation_matrix(master, list,dir):
     plt.clf()
     return 0
 
+# Function to run regression with different lags
 def ols_regression_lag(master,nlag, col):
     R2_result = []
     prevR2 = 0
@@ -165,6 +171,7 @@ def ols_regression_lag(master,nlag, col):
     R2_df = pd.DataFrame(R2_result)
     return R2_df
 
+# Function to Create regression plot with different lags
 def regression_plot(R2_df, dir):
     fig, ax1 = plt.subplots(figsize=(6, 6))
     ax1.plot('Total Lag', 'R2', data=R2_df, color='tab:red', label='R square')
@@ -186,6 +193,7 @@ def regression_plot(R2_df, dir):
     plt.clf()
     return 0
 
+# Function to Create a time series graph after applying lags
 def timeseries_recession_graph_after(master, dir):
     master['house_lag12'] = master['house_12MA'].shift(12)
     fig, ax1 = plt.subplots(figsize=(18, 8))
@@ -240,8 +248,8 @@ def timeseries_recession_graph_after(master, dir):
     plt.clf()
     return 0
 
+# Function to Create a LaTeX document with latex code
 def generate_latex_report(df,df2, image_path, report_path):
-    # Create a LaTeX document with embedded image and dataframe
     latex_code = r'''
 \documentclass[twocolumn,12pt]{article}
 \usepackage[left=1.5cm, right=1.5cm, bottom=2cm, top=2cm]{geometry}
@@ -392,7 +400,6 @@ Based on analysis above, it is statistically confident enough to say that housin
     with open(report_path, 'w') as file:
         file.write(latex_code)
 
-
 # Function to convert a pandas DataFrame to LaTeX table format
 def generate_dataframe_latex(df,list3):
     latex_str = ""
@@ -401,7 +408,6 @@ def generate_dataframe_latex(df,list3):
         latex_str += f"{row[list3[0]]} & {row[list3[1]]} & {row[list3[2]]}  \\\\\n"
     return latex_str
 
-
 # Function to compile LaTeX document into PDF
 def compile_latex_to_pdf(latex_file,cwd):
     subprocess.run([r"C:\Users\siaha\AppData\Local\Programs\MiKTeX\miktex\bin\x64\pdflatex",
@@ -409,6 +415,7 @@ def compile_latex_to_pdf(latex_file,cwd):
                         check=True,
                         cwd=cwd)
 
+#Report function to generate pdf report for this analysis
 def generate_pdf_report(date: str, dir: str):
     output_dir = dir
 
@@ -436,7 +443,7 @@ def generate_pdf_report(date: str, dir: str):
     correlation_matrix(master, second_matrix, output_dir + 'corrmatrix2.png')
     timeseries_recession_graph_after(master, output_dir + 'timeseries2.png')
 
-    # Generate LaTeX report
+    # Generate LaTeX report template
 
     report_path = output_dir + date.strftime("%Y%m%d") +"_unemployment_house_report.tex"
     image_path= r'C:/Users/siaha/PycharmProjects/Unemployment_House/Analytics_Output/'
@@ -447,8 +454,8 @@ def generate_pdf_report(date: str, dir: str):
 
     return 0
 
-
-def generate_html_report(date: str, tempdir: str):
+#Report function to generate html report for this analysis
+def generate_html_report(date: str, dir: str):
     master = process_raw_data()
     stationary_result = stationary_test(master)
 
@@ -546,6 +553,12 @@ def generate_html_report(date: str, tempdir: str):
                 width: 100%;          /* Ensure it takes up the full width of the container */
                 max-width: 200px;     /* Optionally, set a max width for the dropdown */
             }}
+            p {{
+                margin-left: 50px;    /* Increase left margin */
+                margin-right: 50px;   /* Increase right margin */
+                font-size: 18px;      /* Optional: Increase font size for better readability */
+                line-height: 1.6;     /* Optional: Improve line spacing */
+            }}
         </style>
         <script>
             function filterTable() {{
@@ -594,7 +607,7 @@ def generate_html_report(date: str, tempdir: str):
     """
 
     # Save the HTML report
-    output_path = r"C:\Users\siaha\PycharmProjects\Unemployment_House\Analytics_Output\unemployment_house_report.html"
+    output_path = dir + date.strftime("%Y%m%d") +"_unemployment_house_report.html"
     with open(output_path, "w") as f:
         f.write(html_template)
 
@@ -602,13 +615,13 @@ def generate_html_report(date: str, tempdir: str):
 
     return 0
 
-
-def generate_excel_report(date: str, tempdir: str):
+#Report function to generate excel report for this analysis
+def generate_excel_report(date: str, dir: str):
     master = process_raw_data()
     stationary_result = stationary_test(master)
     regression_result = ols_regression_lag(master, 24, 'house_diff')
     # Write the DataFrames to an Excel file
-    report_path = r"C:\Users\siaha\PycharmProjects\Unemployment_House\Analytics_Output\unemployment_house_report.xlsx"
+    report_path = dir + date.strftime("%Y%m%d") + "_unemployment_house_report.xlsx"
     with pd.ExcelWriter(report_path) as writer:
         stationary_result[['Description','P-Value', 'Result']].to_excel(writer, sheet_name='Stationary_Analytics', index=False)
         regression_result.to_excel(writer, sheet_name='Regression_Result', index=False,header=True)

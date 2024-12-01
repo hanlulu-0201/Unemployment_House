@@ -1,6 +1,8 @@
 import sys
 from Reporting import UnrateHouse
 
+#To call all the reports exist within this project
+
 def unratehouse_pdf(date :str, dir: str):
     return UnrateHouse.generate_pdf_report(date, dir)
 
