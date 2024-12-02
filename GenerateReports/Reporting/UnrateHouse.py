@@ -656,14 +656,14 @@ def generate_html_report(date: str, dir: str):
                 y: data[selectedColumn].y,
                 mode: 'lines',
                 name: selectedColumn,
-                line: {{color: '#1f77b4'}}
+                line: {{color: '#1f77b4',dash: 'dash'}}
             }},
             {{
                 x: data.UNRATE.x,
                 y: data.UNRATE.y,
                 mode: 'lines',
                 name: 'Unemployment Rate (UNRATE)',
-                line: {{color: '#ff7f0e', dash: 'dash'}},
+                line: {{color: '#ff7f0e'}},
                 yaxis: 'y2'
             }}
             ]
