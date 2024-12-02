@@ -11,6 +11,7 @@ from plotly.offline import plot
 import subprocess
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
+import json
 
 # Function to manipulate raw data
 def process_raw_data():
@@ -140,7 +141,7 @@ def correlation_matrix(master, list,dir):
     heat_map.set_size_inches(10, 6)
     plt.suptitle('Correlation Matrix of Initial Data', size=15, weight='bold', va='bottom', x=0.5, y=0.93)
     plt.xticks(fontsize=10)
-    plt.yticks(fontsize=10)
+    plt.yticks(fontsize=10, rotation=0)
     plt.savefig(dir)
     plt.clf()
     return 0
@@ -458,6 +459,17 @@ def generate_pdf_report(date: str, dir: str):
 def generate_html_report(date: str, dir: str):
     master = process_raw_data()
     stationary_result = stationary_test(master)
+    #Generate Result graphs
+    master['house_6MA'] = master['house_diff'].rolling(window=6).mean()
+    master['house_12MA'] = master['house_diff'].rolling(window=12).mean()
+    master['house_24MA'] = master['house_diff'].rolling(window=24).mean()
+    master['house_36MA'] = master['house_diff'].rolling(window=36).mean()
+    master['house_48MA'] = master['house_diff'].rolling(window=48).mean()
+    master['house_60MA'] = master['house_diff'].rolling(window=60).mean()
+    second_corr = ['UNRATE', 'house_diff','house_6MA','house_12MA','house_24MA','house_36MA','house_48MA']
+    second_matrix = ['UNRATE','house_diff','house_6MA','house_12MA','house_24MA','house_36MA','house_48MA']
+    correlation_plot(master, second_corr, dir + 'correlationplot2.png')
+    correlation_matrix(master, second_matrix, dir + 'corrmatrix2.png')
 
     # Create a figure with secondary y-axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -469,7 +481,7 @@ def generate_html_report(date: str, dir: str):
 
     # Update layout to include slider
     fig.update_layout(
-        title='Interactive Unemployment Rate Time Series Graph',
+        title='Interactive Unemployment Rate vs. Housing Price Time Series Graph',
         xaxis=dict(
             title='Date',
             rangeselector=dict(
@@ -559,6 +571,15 @@ def generate_html_report(date: str, dir: str):
                 font-size: 18px;      /* Optional: Increase font size for better readability */
                 line-height: 1.6;     /* Optional: Improve line spacing */
             }}
+            .image-container {{
+            margin: 20px auto;
+            text-align: center;
+            }}
+            .image-container img {{
+                max-width: 90%;
+                height: auto;
+                margin: 10px;
+            }}
         </style>
         <script>
             function filterTable() {{
@@ -590,7 +611,7 @@ def generate_html_report(date: str, dir: str):
     {graph_html}
     <!-- Dropdown filter for Result column -->
     <div class="filter-container">
-        <label for="filter-dropdown" style="color: white;">Filter by Result:</label>
+        <label for="filter-dropdown" style="color: white;">Filter by Stationary Result of Each Column:</label>
         <select id="filter-dropdown" class="form-select" onchange="filterTable()">
             <option value="">All</option>
             <option value="stationary">Stationary</option>
@@ -602,6 +623,65 @@ def generate_html_report(date: str, dir: str):
         <h2>Time Series Data Table</h2>
             {table_html}
     </div>
+    <div class="image-container">
+        <h2>Correlation Plots with Different Moving Average Periods</h2>
+        <img src="{dir}correlationplot2.png" alt="Correlation Plot">
+        <h2>Correlation Matrix with Different Moving Average Periods</h2>
+        <img src="{dir}corrmatrix2.png" alt="Correlation Matrix">
+    </div>
+    <div id="time-series-filter-container" style="text-align: center; margin: 20px;">
+        <label for="time-series-filter" style="color: white;">Select Moving Average Column:</label>
+        <select id="time-series-filter" class="form-select" onchange="updateTimeSeriesPlot()">
+            <option value="house_36MA">36-Month Moving Average</option>
+            <option value="house_24MA">24-Month Moving Average</option>
+            <option value="house_12MA">12-Month Moving Average</option>
+        </select>
+    </div>
+    <div id="time-series-plot-container" style="width: 90%; margin: auto;">
+        <div id="time-series-plot"></div>
+    </div>
+    <script>
+        const data = {{
+            house_36MA: {{x: {json.dumps([ts.isoformat() for ts in master.index.tolist()])}, y: {json.dumps(master['house_36MA'].tolist())}}},
+            house_24MA: {{x: {json.dumps([ts.isoformat() for ts in master.index.tolist()])}, y: {json.dumps(master['house_24MA'].tolist())}}},
+            house_12MA: {{x: {json.dumps([ts.isoformat() for ts in master.index.tolist()])}, y: {json.dumps(master['house_12MA'].tolist())}}},
+            UNRATE: {{x: {json.dumps([ts.isoformat() for ts in master.index.tolist()])}, y: {json.dumps(master['UNRATE'].tolist())}}}
+        }}
+    
+        function updateTimeSeriesPlot() {{
+            const selectedColumn = document.getElementById('time-series-filter').value;
+            const plotData = [
+            {{
+                x: data[selectedColumn].x,
+                y: data[selectedColumn].y,
+                mode: 'lines',
+                name: selectedColumn,
+                line: {{color: '#1f77b4'}}
+            }},
+            {{
+                x: data.UNRATE.x,
+                y: data.UNRATE.y,
+                mode: 'lines',
+                name: 'Unemployment Rate (UNRATE)',
+                line: {{color: '#ff7f0e', dash: 'dash'}},
+                yaxis: 'y2'
+            }}
+            ]
+    
+        Plotly.newPlot('time-series-plot', plotData, {{
+            title: 'Filtered Time Series Plot',
+            xaxis: {{title: 'Date'}},
+            yaxis: {{title: 'Values'}},
+            yaxis2: {{
+                title: 'Unemployment Rate',
+                side: 'right',
+                overlaying: 'y'
+            }},
+            template: 'plotly_dark'
+        }})
+        }}
+        updateTimeSeriesPlot();
+    </script>
     </body>
     </html>
     """

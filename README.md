@@ -5,13 +5,16 @@ Unemployment is an important indicators used to explain US economy performance, 
 This analysis wants to explore whether housing price can be used an a predictor to US recession (using umeployment rate to represent the recession cycle). They are very likely to have a negative correlation as housing market usually goes down when unemployment goes up. It's also very likely there would be lagging effects between the two, as housing market usually starts to go down before umemployment starts to go up. If there are measurable lags, how many months would that be?
 
 Data source from FRED:
+
 Median Sales Price for New Houses Sold in the United States (MSPNHSUS)
 https://fred.stlouisfed.org/series/MSPNHSUS
+
 Unemployment Rate (UNRATE)
 https://fred.stlouisfed.org/series/UNRATE
 
-All analysis output is stored in the "Analytics_Output" folder
-Detailed Analysis can be found in the jupyterNotebook file 
+All analysis output is stored in the "Analytics_Output" folder.
+
+Detailed Analysis can be found in the jupyterNotebook file .
 ### Key Take-aways :
 1. Unemployment goes up during recession, and housing price tends to go down
 2. Housing price starts to go down before recession

@@ -5,7 +5,7 @@ import sys
 import tempfile
 from reports import report_runner
 
-# python GenerateReports/main.py -r unratehouse_pdf -o C:\Users\siaha\PycharmProjects\Unemployment_House\Analytics_Output\\
+# python GenerateReports/main.py -r unratehouse_html -d 2024/12/01 -o C:\Users\siaha\PycharmProjects\Unemployment_House\Analytics_Output\\
 # I used this directory: r"C:\Users\siaha\PycharmProjects\Unemployment_House\Analytics_Output\\"
 
 def report_arg():
