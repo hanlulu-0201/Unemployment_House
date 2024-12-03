@@ -631,10 +631,11 @@ def generate_html_report(date: str, dir: str):
     </div>
     <div id="time-series-filter-container" style="text-align: center; margin: 20px;">
         <label for="time-series-filter" style="color: white;">Select Moving Average Column:</label>
-        <select id="time-series-filter" class="form-select" onchange="updateTimeSeriesPlot()">
-            <option value="house_36MA">36-Month Moving Average</option>
-            <option value="house_24MA">24-Month Moving Average</option>
+        <select id="time-series-filter" class="form-select" onchange="updateTimeSeriesPlot()">            
             <option value="house_12MA">12-Month Moving Average</option>
+            <option value="house_24MA">24-Month Moving Average</option>
+            <option value="house_36MA">36-Month Moving Average</option>
+            <option value="house_48MA">48-Month Moving Average</option>
         </select>
     </div>
     <div id="time-series-plot-container" style="width: 90%; margin: auto;">
@@ -642,9 +643,10 @@ def generate_html_report(date: str, dir: str):
     </div>
     <script>
         const data = {{
-            house_36MA: {{x: {json.dumps([ts.isoformat() for ts in master.index.tolist()])}, y: {json.dumps(master['house_36MA'].tolist())}}},
-            house_24MA: {{x: {json.dumps([ts.isoformat() for ts in master.index.tolist()])}, y: {json.dumps(master['house_24MA'].tolist())}}},
             house_12MA: {{x: {json.dumps([ts.isoformat() for ts in master.index.tolist()])}, y: {json.dumps(master['house_12MA'].tolist())}}},
+            house_24MA: {{x: {json.dumps([ts.isoformat() for ts in master.index.tolist()])}, y: {json.dumps(master['house_24MA'].tolist())}}},
+            house_36MA: {{x: {json.dumps([ts.isoformat() for ts in master.index.tolist()])}, y: {json.dumps(master['house_36MA'].tolist())}}},
+            house_48MA: {{x: {json.dumps([ts.isoformat() for ts in master.index.tolist()])}, y: {json.dumps(master['house_48MA'].tolist())}}},
             UNRATE: {{x: {json.dumps([ts.isoformat() for ts in master.index.tolist()])}, y: {json.dumps(master['UNRATE'].tolist())}}}
         }}
     
@@ -654,7 +656,7 @@ def generate_html_report(date: str, dir: str):
             {{
                 x: data[selectedColumn].x,
                 y: data[selectedColumn].y,
-                mode: 'lines',
+                mode: 'Housing Price Moving Average',
                 name: selectedColumn,
                 line: {{color: '#1f77b4',dash: 'dash'}}
             }},
@@ -669,7 +671,7 @@ def generate_html_report(date: str, dir: str):
             ]
     
         Plotly.newPlot('time-series-plot', plotData, {{
-            title: 'Filtered Time Series Plot',
+            title: 'Unemployment Rate vs. Different MA',
             xaxis: {{title: 'Date'}},
             yaxis: {{title: 'Values'}},
             yaxis2: {{
