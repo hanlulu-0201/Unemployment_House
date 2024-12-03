@@ -14,12 +14,12 @@ from plotly.subplots import make_subplots
 import json
 
 # Function to manipulate raw data
-def process_raw_data():
-    df_unrate = pd.read_csv(r'D:\JupyterNotebook\HG_Vora\UNRATE.csv')
+def process_raw_data(dir):
+    df_unrate = pd.read_csv(dir + 'UNRATE.csv')
     df_unrate = df_unrate.set_index(pd.to_datetime(df_unrate['DATE']))
     df_unrate = df_unrate.drop(['DATE'], axis=1)
 
-    df_house = pd.read_csv(r'D:\JupyterNotebook\HG_Vora\MSPNHSUS.csv')
+    df_house = pd.read_csv(dir + 'MSPNHSUS.csv')
     df_house = df_house.set_index(pd.to_datetime(df_house['DATE']))
     df_house = df_house.drop(['DATE'], axis=1)
 
@@ -121,7 +121,6 @@ def correlation_plot(master, list,dir):
 
     handles = [plt.plot([], [], color=plt.cm.brg(i / 2.), ls="", marker="o",markersize=np.sqrt(10))[0] for i in range(3)]
     handles = [handles[0], handles[2], handles[1]]
-    # plt.legend(handles, loc=(1.02,0))
     plt.savefig(dir)
     plt.clf()
     return 0
@@ -418,19 +417,17 @@ def compile_latex_to_pdf(latex_file,cwd):
 
 #Report function to generate pdf report for this analysis
 def generate_pdf_report(date: str, dir: str):
-    output_dir = dir
-
     #Generate All Table and Images we need for exploratory Analysis
-    master = process_raw_data()
+    master = process_raw_data(dir)
     stationary_result = stationary_test(master)
-    timeseries_recession_graph(master, output_dir + 'timeseries1.png')
+    timeseries_recession_graph(master, dir + 'timeseries1.png')
     first_corr = ['UNRATE', 'MSPNHSUS', 'house_diff', 'house_return']
     first_matrix = ['UNRATE', 'house_diff', 'house_return']
-    correlation_plot(master, first_corr, output_dir + 'correlationplot1.png')
-    correlation_matrix(master, first_matrix, output_dir +'corrmatrix1.png')
+    correlation_plot(master, first_corr, dir + 'correlationplot1.png')
+    correlation_matrix(master, first_matrix, dir +'corrmatrix1.png')
     #Generate Regression Result
     regression_result = ols_regression_lag(master,24, 'house_diff')
-    regression_plot(regression_result, output_dir +'regression_result.png')
+    regression_plot(regression_result, dir +'regression_result.png')
     #Generate Result graphs
     master['house_6MA'] = master['house_diff'].rolling(window=6).mean()
     master['house_12MA'] = master['house_diff'].rolling(window=12).mean()
@@ -440,24 +437,24 @@ def generate_pdf_report(date: str, dir: str):
     master['house_60MA'] = master['house_diff'].rolling(window=60).mean()
     second_corr = ['UNRATE', 'house_diff','house_6MA','house_12MA','house_24MA','house_36MA','house_48MA']
     second_matrix = ['UNRATE','house_diff','house_6MA','house_12MA','house_24MA','house_36MA','house_48MA']
-    correlation_plot(master, second_corr, output_dir + 'correlationplot2.png')
-    correlation_matrix(master, second_matrix, output_dir + 'corrmatrix2.png')
-    timeseries_recession_graph_after(master, output_dir + 'timeseries2.png')
+    correlation_plot(master, second_corr, dir + 'correlationplot2.png')
+    correlation_matrix(master, second_matrix, dir + 'corrmatrix2.png')
+    timeseries_recession_graph_after(master, dir + 'timeseries2.png')
 
     # Generate LaTeX report template
 
-    report_path = output_dir + date.strftime("%Y%m%d") +"_unemployment_house_report.tex"
+    report_path = dir + date.strftime("%Y%m%d") +"_unemployment_house_report.tex"
     image_path= r'C:/Users/siaha/PycharmProjects/Unemployment_House/Analytics_Output/'
     generate_latex_report(stationary_result, regression_result, image_path, report_path)
 
     # Compile LaTeX file to PDF
-    compile_latex_to_pdf(report_path,output_dir)
+    compile_latex_to_pdf(report_path,dir)
 
     return 0
 
 #Report function to generate html report for this analysis
 def generate_html_report(date: str, dir: str):
-    master = process_raw_data()
+    master = process_raw_data(dir)
     stationary_result = stationary_test(master)
     #Generate Result graphs
     master['house_6MA'] = master['house_diff'].rolling(window=6).mean()
@@ -699,7 +696,7 @@ def generate_html_report(date: str, dir: str):
 
 #Report function to generate excel report for this analysis
 def generate_excel_report(date: str, dir: str):
-    master = process_raw_data()
+    master = process_raw_data(dir)
     stationary_result = stationary_test(master)
     regression_result = ols_regression_lag(master, 24, 'house_diff')
     # Write the DataFrames to an Excel file

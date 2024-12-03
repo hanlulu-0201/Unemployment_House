@@ -31,3 +31,10 @@ This project provides different options for reporting, includes the following:
 ### Tableau Dashboard Example
 read from the data in Excel reports
 https://public.tableau.com/app/profile/hanlu.xia/viz/unemployment_house_report/Dashboard1?publish=yes
+
+### Instruction on Running
+1. Cloning the project from GitHub
+2. Change the args in the example command to your local directory
+3. Example: python GenerateReports/main.py -r unratehouse_html -d 2024/12/01 -o C:\Users\siaha\PycharmProjects\Unemployment_House\Analytics_Output\\
+4. Run in Command Prompt
+5. You can also change the -r to run different report: unratehouse_html, unratehouse_pdf, unratehouse_excel
